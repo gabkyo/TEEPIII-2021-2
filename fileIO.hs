@@ -1,6 +1,7 @@
 module FileIO where
 
 import System.IO
+
 -------------------------
 --Entrada
 -------------------------

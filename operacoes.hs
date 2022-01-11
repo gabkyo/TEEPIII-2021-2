@@ -1,12 +1,45 @@
 module Operacoes where
 
-import Data.Tree
-import Data.List
-
 -- arvore com os pontos onde a distancia entre nos é a distancia euclidiana sqrt(soma(quadrado(xik-xjk)))
 -- a identificacao de cada linha é o numero da linha
 
 -- ** eh exponenciacao float, ^ e  ^^ eh expo int
+
+
+----------------------
+-- DEFINICAO DOS PONTOS
+
+data Ponto = Ponto { ind :: Int , dim :: [Double]} deriving (Show,Read,Eq)
+
+instance Ord Ponto where
+    compare a b = compare (ind a) (ind b)
+
+--pega os pontos e monta uma lista de Ponto
+pontoInit :: [[Double]] -> [Ponto] 
+pontoInit pontos | (length pontos) > 0 = do
+    let comprimento = length pontos
+    let x = zip [1..comprimento] pontos
+    map (\(i,p) -> Ponto { ind = i, dim= p}) x
+ |otherwise = []
+
+--mede a distancia entre 2 pontos
+pontoDist :: Ponto -> Ponto -> Double
+pontoDist p1 p2 | ((length $ dim p1) == (length $ dim p2)) = do
+    let param = zip (dim p1) (dim p2) -- param = [(dimensao n de p1, dimensao n de p2)]
+    let diff = map (\(x,y) -> (x-y) ** 2 ) param -- (dn1-dn2)^2
+    (sum diff) ** 0.5
+ | otherwise = error $ concat ["Pontos de dimensões diferentes: \n P1: ",show p1,"\nP2: ",show p2]
+
+-- retorna o ponto mais proximo de um ponto que nao é ele mesmo
+pontoMaisProximo :: Ponto -> [Ponto] -> Ponto
+pontoMaisProximo pRef pontos = do
+    let lista = filter (/= pRef) pontos
+    let distancias = map (pontoDist pRef) lista
+    snd $ minimum (zip distancias lista)
+
+----------------------
+----------------------
+-- DEFINICAO DA ARVORE
 
 {-
 1. Escolher um ponto inicial para compor a árvore geradora mínima
@@ -18,38 +51,49 @@ mínima
 árvores (os K grupos).
 -}
 
+-- arvore , que pode ser ArvoreVazia ou  Node a com filhos
+data Arvore a = ArvoreVazia | Node a [Arvore a] deriving (Show,Read,Eq) 
 
--- a distancia entre dois pontos é a raiz da soma dos quadrados das diferencas (soma((ai-bi)**2 + (aj-bj)**2 +  ...))**1/2
-distEuclid :: [Double] -> [Double] -> Double
-distEuclid p1 p2 | (length p1) == (length p2) = do
-    let dimensoes = zip p1 p2
-    sum (map (\(x,y) -> (x-y)**2 ) dimensoes) ** 1/2
- |otherwise = -1 --se der negativo eh pq houve erro
+-- insere o ponto novo como filho do pai escolhido ou inicializa se arvore vazia
+arvoreInsert :: (Eq a) => a -> a -> Arvore a -> Arvore a
+arvoreInsert pnovo _ ArvoreVazia = Node pnovo []  -- arvore vazia pnovo e a raiz
+arvoreInsert pnovo pai (Node a filhos) | a == pai = Node pai $ (Node pnovo []) : filhos -- no atual eh o procurado add pnovo como filho
+    | otherwise = Node a $ map (arvoreInsert pnovo pai) filhos --no nao eh o procurado, aplica nos filhos
 
---distEuclid mas usando indexacao 1
-distEuclidIndex :: [[Double]] -> Int -> Int -> Double 
-distEuclidIndex pontos i1 i2 | (i1 > 0) && (i2 > 0 ) =  distEuclid (pontos !! (i1 -1)) (pontos !! (i2 -1))
+--profundidade da arvore
+arvoreDepth :: Arvore a -> Int
+arvoreDepth ArvoreVazia = 0
+arvoreDepth (Node a filhos) = 1 + maximum (map arvoreDepth filhos)
 
--- retorna o ponto com menor distancia de um ponto de index iref
-menorDist1P :: Int -> [[Double]] -> Int
-menorDist1P iref pontos = do
-    let tamanho = (length pontos) --numero de pontos
-    let index = filter (/= iref) [1..tamanho] --index dos pontos que nao sao o de referencia
-    let distancias = map (\x -> distEuclidIndex pontos iref x ) index --mapeia as distancias
-    snd (minimum (zip distancias index)) --retorna o ponto com menor distancia e menor indice
+-- verifica se o Node ja esta na arvore
+arvoreTem :: (Eq a) => a -> Arvore a -> Bool
+arvoreTem _ ArvoreVazia = False
+arvoreTem pRef (Node a filhos)  = or ((a == pRef ) : (map (arvoreTem pRef) filhos) )
 
---o minimo dado varios pontos de referencia
-menorDistNP :: [Int] -> [[Double]] -> Int
-menorDistNP arvore pontos = do
-    let tamanho = (length pontos) --numero de pontos
-    let index = [1..tamanho] \\ arvore--index dos pontos que nao sao os de referencia
+-- lista de Nodes na arvore
+arvoreNodes :: Arvore a -> [a]
+arvoreNodes ArvoreVazia = []
+arvoreNodes (Node a filhos) = a : (concatMap arvoreNodes filhos)
 
-snd (minimum (zip (\x -> map )))
-    
+--lista de nodes que nao estao na arvore mas estao na lista
+arvoreNodesNot :: (Eq a) => [a] -> Arvore a -> [a]
+arvoreNodesNot pontos arvore = do
+    let regra = arvoreNodes arvore
+    filter (\x ->notElem x regra) pontos
+
+--construir a arvore
+arvoreBuild :: [a] -> Arvore a -> Arvore a
 
 
--- passo 1 é adicionar o primeiro ponto a arvore
-inicilizaArvore :: [Int]
-inicilizaArvore = [1]
 
-[(3,1),(2,2),(1,3)]
+----------------------
+
+{-
+1. Escolher um ponto inicial para compor a árvore geradora mínima
+2. Adicionar o ponto mais próximo a qualquer nó da árvores à árvore geradora mínima
+3. Repetir o passo 2 até que todos os pontos tenham sido adicionados à árvore geradora
+mínima
+4. Escolher a maior aresta da árvore geradora mínima para dividi-la em dois grupos
+5. Repetir o passo 4 para a floresta de árvores formadas até que se tenham apenas K
+árvores (os K grupos).
+-}
