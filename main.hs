@@ -1,11 +1,16 @@
 import FileIO
 import Operacoes
+---------------------
+-- Constantes
 
+------------------
 
 main = do
     --arquivos <- promptNomes  --le os nomes dos arquivos [entrada,saida] e K
-    --dados <- lerEntrada (arquivos !! 0)
-    dados <- lerEntrada "iris.csv"
+    let arquivos = ["iris.csv"] --para teste
+    dados <- lerEntrada (arquivos !! 0)
     let pontos = pontoInit dados
-    let p1 = head $ filter (\x -> (ind x) == 1) pontos
-    print p1
+    print pontos
+    let arvore = arvInit pontos 1
+    putStrLn $ arvString arvore
+
