@@ -1,4 +1,6 @@
-module Operacoes where
+module Arvores where
+
+import Data.List
 
 -- arvore com os pontos onde a distancia entre nos é a distancia euclidiana sqrt(soma(quadrado(xik-xjk)))
 -- a identificacao de cada linha é o numero da linha
@@ -122,16 +124,24 @@ mínima
 -}
 -- vetor arvore (p1,p2) onde p1 p2 sao potos ligados por terem a menor distancia entre eles
 
+--Galhos----
 type Galho = (Ponto,Ponto)
-type Arvore = [Galho]
 
---comparação entre galhos
+--igualdade entre galhos
 galhoEq :: Galho -> Galho -> Bool
 galhoEq (a,b) (c,d) =( (a==c) && (b==d) ) || ( (a==d) && (b==c) )
 
 --se um ponto esta em um galho
 pontoGalhoEq :: Ponto -> Galho -> Bool
 pontoGalhoEq a (b,c) = (a == b) || (a == c)
+
+--aresta de um galho
+galhoAresta :: Galho -> Double
+galhoAresta galho = pontoDist  (fst galho) (snd galho) 
+
+------------
+--Arvore----
+type Arvore = [Galho]
 
 --se um ponto esta na arvore
 arvPontoEq :: Ponto -> Arvore -> Bool
@@ -154,13 +164,16 @@ arvPontos arvore = do
     let lista = (map fst arvore) ++ (map snd arvore)
     uniqueList lista
 
--- galho com maior aresta da arvore
-arvMaiorAresta :: Arvore -> Galho
-arvMaiorAresta arvore = do
+-- galho com maior aresta e aresta de uma arvore
+arvMaiorGalho :: Arvore -> (Double,Galho)
+arvMaiorGalho arvore = do
     let arestas = [(pontoDist (fst x) (snd x), x) | x <- arvore]  -- (tamanho aresta, Par de pontos)
-    snd $ maximum arestas --par com a maior aresta
+    maximum arestas --par com a maior aresta
+
 
 -- pega todos os galhos ligados a um ponto
+-- pegando primeiro todos os pontos ligados direto ao ponto de referencia
+-- e aplicando recursivamente nos galhos nao obtidos
 arvSeguePonto :: Arvore -> Ponto -> Arvore
 arvSeguePonto arvore pRef = do
     let arvRef = filter (\x -> pontoGalhoEq pRef x) arvore --galhos ligado ao ponto atual
@@ -170,20 +183,6 @@ arvSeguePonto arvore pRef = do
     --concatena os 
         --galhos atuais com os galhos obtidos dos pontos ligados na arvore sem  os galhos obtidos
 
---divide a arvore em dado galho e  retorna arvore velha sem os galhos conectados e arvore nova
-arvDividir :: Arvore -> Galho -> (Arvore,Arvore) 
-arvDividir arvore galho | not (arvGalhoEq galho arvore) = (arvore,[]) --galho nao esta na arvore logo arvore nova e nula
-    | otherwise = do
-        let arv_temp = filter (== galho) arvore --arvore sem o galho
-        let arv1 = arvSeguePonto arv_temp (fst galho)
-        let arv2 = arvSeguePonto arv_temp (snd galho)
-        (arv1,arv2)
-
-galhoString :: Galho -> String
-galhoString galho =  "Galho (" ++ (show $ ind (fst galho)) ++ "," ++ (show $ ind (snd galho)) ++ ")\n"
-
-arvString :: Arvore -> String
-arvString arvore = "Árvore\n" ++ (concatMap galhoString arvore)
 
 --incia a montagem da arvore
 arvInit :: [Ponto] -> Int -> Arvore
@@ -216,4 +215,46 @@ arvBuild pontos arvore = do
         let dupla = pontoMaisProximoN nos_arv lista 
         let nova_arvore = dupla : arvore --concatena galho a nova arvore
         arvBuild pontos nova_arvore
+
+
+-- retorna a arvore como uma string "ponto, ponto ..."
+arv2String :: Arvore -> String
+arv2String arvore = do
+    let pontos = sort $ arvPontos arvore --pontos na arvore
+    intersperse ", " $ map (\x -> ind x) pontos 
+
+------------
+--Floresta--
+type Floresta = [Arvore]
+
+--dado uma floresta, retorna as strings das arvores divididas por \n
+flo2String :: Floresta -> String
+flo2String floresta = unlines $ map arv2String floresta
+
+--retorna a arvore com a maior aresta
+floArvMaiorAresta :: Floresta -> Arvore
+floArvMaiorAresta floresta = do
+    let maxArestas = map arvMaiorGalho floresta --[(aresta,galho)]
+    let ranking = zip (map fst maxArestas) floresta  -- (maiorAresta,arvore)
+    snd $ maximum ranking
+
+
+--divide a arvore uma vez no maior galho, retornando uma floresta
+arvSplit :: Arvore -> Floresta
+arvSplit arv0 | (length arv0) < 2 = error $ "arvSplit\nArvore não é grande o bastante para dividir\nArvore:" ++ (arv2String arvore) 
+arvSplit arv0 = do
+    let galhoM = snd $ arvMaiorGalho arv0 --maior galho
+    let arv1 = filter (== galhoM) arv0 --arv sem o maior galho
+    [arvSeguePonto arv1 $ fst galhoM, arvSeguePonto arv1 $ snd galhoM]
+
+-- da split na maior arvore da floresta
+floSplit :: Floresta -> Floresta
+floSplit floresta ka | ka < (length floresta) = error $ "floSplit\nFloresta já é maior que K=" ++ (show ka) ++ "\n Floresta:\n" ++ flo2String
+    | ka == (length floresta) = floresta -- ja ta certo
+    | otherwise = do
+        let alvo = floArvMaiorAresta
+
+        
 ----------------------
+
+
