@@ -13,10 +13,13 @@ main = do
     saida <- getLine
     putStrLn "Forneca o número de grupos (K):"
     grupos <- getLine
+    let ka = read grupos :: Int
     texto <- readFile entrada
     let dados = map lePonto (lines texto)
     let pontos = pontoInit dados
-    print pontos
     let arvore = arvInit pontos 1
-    putStrLn $ arv2String arvore
+    let floresta = floSplit [arvore] ka
+    putStrLn "Agrupamentos:"
+    putStrLn $ flo2String floresta
+    escreveSaida saida (flo2String floresta)
 

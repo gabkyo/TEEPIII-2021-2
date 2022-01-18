@@ -27,7 +27,12 @@ checaVetorEntrada entrada = do
     let ref = head tamanhos 
     all (== ref) tamanhos 
 
-
+-- manda uma string pro terminal e envia a resposta de volta
+perguntaUsuario :: String -> IO String 
+perguntaUsuario linha = do
+    putStrLn linha
+    resposta <- getLine
+    return resposta
 -------------------------
 --Saida
 -------------------------
