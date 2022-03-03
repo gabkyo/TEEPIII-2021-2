@@ -71,12 +71,11 @@ arvGalhoIns :: Arvore -> Galho -> Arvore
 arvGalhoIns [] galho = [galho]
 arvGalhoIns arvore galho = if not $ arvGalhoCheck arvore galho -- se nao sao pontos um de fora um de dentro
         then arvore
-    else galho : (filter (\x -> (x /= (fst galho,fst galho)) && (x /= (snd galho,snd galho)) ) arvore) 
-    --filtra galho com nos iguais agora que tem um galho novo com nos diferentes pois a raiz e a quebra do ultimo ramo gera arvore com um ponto e um galho do mesmo ponto
+    else  arvore ++ [galho]
 
 -- insere ponto na arvore formando galho com o mais proximo da arvore
 arvPontoIns :: Arvore -> Ponto -> Arvore
-arvPontoIns [] ponto = [(ponto,ponto)] -- raiz é galho com no repetido
+arvPontoIns [] ponto = error $ "arvPontoIns\nNão deveria inserir na arvore vazia, devia ir pra arvInit\nPonto:" ++ (show ponto)
 arvPontoIns arvore ponto = if arvPontoEq arvore ponto -- ja tem
         then arvore -- nao muda
     else do
@@ -120,8 +119,8 @@ arvInit pontos index = do
     else if (pontoI pontos index) == []
         then error $ "arvInit\nNão tem o index pedido, Index: " ++ (show index) ++ "\nPontos" ++ (show pontos)
     else do
-        let raiz = head $ pontoI pontos index -- raiz da arvore
-        arvBuild pontos (arvPontoIns [] raiz) -- continua a construir
+        let raiz = pontoI pontos index -- raiz da arvore
+        arvBuild pontos [pontoMaisProximoN raiz pontos] -- continua a construir
             
 
 --cresce a arvore apos iniciada
@@ -134,7 +133,8 @@ arvBuild pontos arvore = do
     if pontosFora == []
         then arvore -- nao tem mais pontos a adicionar na arvore
     else do
-        let novo_galho = pontoMaisProximoN pontosArv pontosFora  --novo galho
+        let pontoRecente = snd $ last arvore --ultimo ponto adicionado a arvore
+        let novo_galho = (pontoRecente,pontoMaisProximo pontosFora pontoRecente)   --novo galho
         arvBuild pontos (arvGalhoIns arvore novo_galho)
 
 
@@ -153,7 +153,7 @@ type Floresta = [Arvore]
 
 --dado uma floresta, retorna as strings das arvores divididas por \n
 flo2String :: Floresta -> String
-flo2String floresta = unlines $ map arv2String (sort floresta)
+flo2String floresta = unlines $ map arv2String (sort (map sort floresta))
 
 --retorna a arvore com a maior aresta
 floArvMaiorAresta :: Floresta -> Arvore
@@ -172,8 +172,7 @@ arvSplit arv0 = if (length arv0) <= 1
             [[(fst galho,fst galho)],[(snd galho,snd galho)]]
     else do --arvore é grande o bastante
         let galhoM = snd $ arvMaiorGalho arv0 --maior galho
-        let arv1 = arvGalhoDel arv0 galhoM --arv sem os galhos ligados ao maior galho
-        [[galhoM],arv1]
+        [(takeWhile (/= galhoM) arv0) ++ [(fst galhoM,fst galhoM)], [(snd galhoM,snd galhoM)] ++ (delete galhoM (dropWhile (/= galhoM) arv0 )) ]
 
 -- da split na maior arvore da floresta ate o numero de arvores >= ka
 floSplit :: Floresta -> Int -> Floresta
@@ -183,7 +182,7 @@ floSplit floresta ka = if ka < 0
         then floresta --ja ta com tamanho o bastante
     else do --escolhe arvore
         let arvore = floArvMaiorAresta floresta --maior arvore da floresta
-        let nova_floresta = (filter (/= arvore) floresta) ++ (arvSplit arvore) -- as outras arvores mais a maior arvore dividida
+        let nova_floresta = (delete arvore floresta) ++ (arvSplit arvore) -- as outras arvores mais a maior arvore dividida
         floSplit nova_floresta ka
 
 
