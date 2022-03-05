@@ -1,0 +1,3 @@
+Distancia: 54.569565 Custo: 1162.0044
+Sequencia de Cidades:["dores do rio preto","apiaca","presidente kennedy","rio novo do sul","vargem alta","castelo","venda nova","afonso claudio","itarana","baixo guando","colatina","rio bananal","alto rio novo","mantenoplis"] Distancia: 37.31392 Custo: 748.7762
+Sequencia de Cidades:["dores do rio preto","vargem alta","afonso claudio","baixo guando","alto rio novo","mantenoplis"] Distancia: 21.620083 Custo: 182.56122

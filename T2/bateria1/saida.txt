@@ -1,0 +1,3 @@
+Distancia: 97.05124 Custo: 1799.5198
+Sequencia de Cidades:["dores do rio preto","apiaca","presidente kennedy","rio novo do sul","vargem alta","castelo","venda nova","afonso claudio","itarana","baixo guando","colatina","rio bananal","nova venecia","boa esperanca","pedro canario","montanha"] Distancia: 43.777447 Custo: 949.97943
+Sequencia de Cidades:["dores do rio preto","vargem alta","afonso claudio","baixo guando","alto rio novo","agua doce do norte","boa esperanca","conceicao da barra","pedro canario","montanha"] Distancia: 48.138607 Custo: 488.73395
