@@ -11,8 +11,10 @@ saidaTxt = "saida.txt"
 --Numero Esperado de Dimensões
 ndim = 2
 
+
 checkCoord :: [[Double]] -> Bool --cordenadas devem ser [[x,y]] 
 checkCoord coord = and $ [(length x) == ndim | x <- coord ]
+
 
 checkCustos :: [[Double ]] -> Bool  --custos devem ser n arrays de n valores
 checkCustos custos = do
@@ -20,10 +22,12 @@ checkCustos custos = do
     let tamN = map length custos
     and $ map (tamanho == ) tamN
 
+
 arqLinhas :: String -> [String]
 arqLinhas arquivo = do
     let texto = readFile arquivo
     lines arquivo
+
 
 leCidades :: [String] -> [(String, [Double])]
 leCidades linhas | odd (length linhas) = error ("leCidades\nNumero impar de linhas em " ++ cidadesTxt ++ ", não há pares para todas as cidades\\coordenadas.\n" ++ (show linhas)) 
@@ -36,6 +40,7 @@ leCidades linhas | odd (length linhas) = error ("leCidades\nNumero impar de linh
             let nomes = [(snd x) | x <- ind, odd (fst x)]
             zip nomes coordenadas
     
+
 leDiaria :: [String] -> [([Double], [Double])]
 leDiaria linhas | odd (length linhas ) = error ("leDiaria\nNumero impar de linhas em " ++ diariasTxt ++ ", não há diarias\\custos para todas as cidades.\n" ++ (show linhas)) 
     | otherwise = do
@@ -65,3 +70,14 @@ listaCidades cidades dc = do
 
 
 
+--escreve texto no arquivo nome , sobrescrevendo o que ja existe
+escreveArquivo :: String -> String -> IO ()
+escreveArquivo arquivo texto = writeFile arquivo texto
+
+
+geraSaida :: [Cidade] -> IO()
+geraSaida cidades = do
+    putStrLn $ cidadeStringN cidades
+    let texto = unlines [item3 cidades, item4 cidades, item5 cidades]
+    putStrLn texto
+    escreveArquivo saidaTxt texto

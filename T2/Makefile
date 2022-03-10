@@ -4,7 +4,7 @@ EXE := $(TARGET).exe
 SAIDA := saida.txt
 TESTEARQ := $(filter-out $(TESTEDIR)/saida.txt, $(wildcard $(TESTEDIR)/*.txt))
 
-all: build test clean
+all: build test
 
 build:
 	ghc main.hs -no-keep-hi-files -no-keep-o-files
